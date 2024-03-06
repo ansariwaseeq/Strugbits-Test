@@ -1,0 +1,31 @@
+const { Chat } = require('../../../models');
+const { DELETION_TYPE } = require('../../../constants');
+
+const CONTROLLER = [
+    async function searchChatsController(req, res) {
+        try {
+            const id = req.session.passport.user;
+            const { query } = req.query;
+
+            const chats = await Chat.findOne({
+                $text: { $search: query },
+                from: id,
+                deletionType: {
+                    $nin: [DELETION_TYPE.FOR_ME, DELETION_TYPE.FOR_EVERYONE]
+                },
+            }).select({ message: 1, from: 1, created_at: 1, _id: 0 })
+            
+            console.log(chats)
+
+            if (chats == null)
+                res.status(200).send(chats);
+            else
+            res.status(201).send('no record with this search')
+        } catch (error) {
+            console.error(error.message);
+            res.status(500).send('Cannot fetch chats');
+        }
+    }
+];
+
+module.exports = CONTROLLER;
